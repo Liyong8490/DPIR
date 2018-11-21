@@ -1,0 +1,54 @@
+{
+  "name": "Denoise_UNet_DIV2K" ,
+  "use_tb_logger": false,
+  "model": "denoising_model",
+  "noise_level": [0, 50],
+  "gpu_ids": [0],
+
+  "datasets_opt": {
+    "train": {
+      "name": "DIV2K",
+      "data_root": "./datasets/DIV2K800/DIV2K800_sub.lmdb",
+      "use_shuffle": true,
+      "n_workers": 0,
+      "batch_size": 16,
+      "im_size": 128,
+      "use_flip": true,
+      "use_rotate": true
+    },
+    "val": {
+      "name": "Set12",
+      "data_root": "./datasets/val_set5/Set5",
+      "noise_level": 25
+    }
+  },
+
+  "path_opt": {
+    "root": "./",
+    "pretrained_model": null
+  },
+
+  "network_opt": {
+    "network_name": "UNet",
+    "in_nc": 3,
+    "out_nc": 3,
+    "nf": 64
+  },
+
+  "train_opt": {
+    "lr": 1e-4,
+    "lr_scheme": "MultiStepLR",
+    "lr_steps": [2e5, 4e5, 6e5, 8e5],
+    "lr_gamma": 0.5,
+    "weight_decay": 0,
+    "criterion": "l1",
+    "val_freq": 5e3,
+    "manual_seed": 0,
+    "max_iter": 1e6
+  },
+
+  "logger_opt": {
+    "print_freq": 200,
+    "save_ckpt_freq": 5e3
+  }
+}
