@@ -34,6 +34,10 @@ def parse(opt_path, is_train=True): # remove comments starting with '//'
             dataset['data_root'] = os.path.expanduser(dataset['data_root'])
             if dataset['data_root'].endswith('lmdb'):
                 is_lmdb = True
+        if 'label_root' in dataset and dataset['label_root'] is not None:
+            dataset['label_root'] = os.path.expanduser(dataset['label_root'])
+        if 'noisy_root' in dataset and dataset['noisy_root'] is not None:
+            dataset['noisy_root'] = os.path.expanduser(dataset['noisy_root'])
         dataset['data_type'] = 'lmdb' if is_lmdb else 'img'
 
     for key, path in opt['path_opt'].item():

@@ -8,6 +8,7 @@
   "datasets_opt": {
     "train": {
       "name": "DIV2K",
+      "mode": "label",
       "data_root": "./datasets/DIV2K800/DIV2K800_sub.lmdb",
       "use_shuffle": true,
       "n_workers": 0,
@@ -18,7 +19,9 @@
     },
     "val": {
       "name": "Set12",
-      "data_root": "./datasets/val_set5/Set5",
+      "mode": "label-noisy",
+      "label_root": "./datasets/val_set12/Set12",
+      "noisy_root": "./datasets/val_set12/noisySet12",
       "noise_level": 25
     }
   },
