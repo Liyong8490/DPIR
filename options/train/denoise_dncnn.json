@@ -1,5 +1,5 @@
 {
-  "name": "Denoise_UNet_DIV2K" ,
+  "name": "Denoise_DnCNN_DIV2K" ,
   "use_tb_logger": false,
   "model": "denoising_model",
   "gpu_ids": [0],
@@ -32,7 +32,7 @@
   },
 
   "network_opt": {
-    "network_name": "UNet",
+    "network_name": "DnCNN",
     "in_nc": 3,
     "out_nc": 3,
     "nf": 64

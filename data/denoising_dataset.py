@@ -15,25 +15,85 @@ class DenoiseDataset(data.Dataset):
     def __init__(self, opt):
         super(DenoiseDataset, self).__init__()
         self.opt = opt
-        self.label_root = None
-        self.noisy_root = None
         # environment for lmdb
-        if 'data_root' in opt
-        self.env, self.label_root = util.get_image_paths(opt['data_type'], opt['data_root'])
-        assert self.paths, "Error: Dataset path is empty."
+        self.env_lb, self.label_root = util.get_image_paths(opt['data_type'], opt['label_root'])
+        self.env_ni, self.noisy_root = util.get_image_paths(opt['data_type'], opt['noisy_root'])
+
+        assert self.label_root, "Error: Dataset path is empty."
+
+        if self.label_root and self.noisy_root:
+            assert len(self.label_root) == len(self.noisy_root), \
+                "Label and noisy dataset have different number of images: {}, {}.".format(
+                    len(self.label_root), len(self.noisy_root))
 
         self.random_scale_list = [1]
 
     def __getitem__(self, index):
-        scale = self.opt['scale']
+        noisy_path_ = None
+        nlv = self.opt['noise_level']
+        if len(nlv) == 1:
+            nlv = [nlv, nlv]
+        elif len(nlv) != 2:
+            raise NotImplementedError("ERROR: noise level setting is wrong, please give a range e.g. [0, 50].")
         im_size = self.opt['im_size']
-        path = self.paths[index]
-        img = util.read_img(self.env, path)
-        if self.opt['phase'] != 'train':
-            img = util.modcrop(img, scale)
+        label_path_ = self.label_root[index]
+        img_label = util.read_img(self.env_lb, label_path_)
         if self.opt['color']:
-            img = util.channel_convert(img.shape[2], self.opt['color'], [img])[0]
+            img_label = util.channel_convert(img_label.shape[2], self.opt['color'], [img_label])[0]
+        # force to 3 channels
+        if img_label.ndim == 2:
+            img_label = cv2.cvtColor(img_label, cv2.COLOR_GRAY2BGR)
+        # get noisy image
+        if self.noisy_root:
+            noisy_path_ = self.noisy_root[index]
+            img_noisy = util.read_img(self.env_ni, noisy_path_)
+            if img_noisy.ndim == 2:
+                img_noisy = cv2.cvtColor(img_noisy, cv2.COLOR_GRAY2BGR)
+        else:  # add noise on-the-fly
+            # random sample noise level from given range
+            if self.opt['phase'] == 'train':
+                random_scale = random.choice(self.random_scale_list)
+                H_s, W_s, _ = img_label.shape
 
-        if self.paths:
+                def _mod(n, random_scale_, thres):
+                    rlt = int(n * random_scale_)
+                    return thres if rlt < thres else rlt
 
+                H_s = _mod(H_s, random_scale, im_size)
+                W_s = _mod(W_s, random_scale, im_size)
+                img_label = cv2.resize(np.copy(img_label), (W_s, H_s), interpolation=cv2.INTER_LINEAR)
 
+            # add random noise to generate img_noisy
+            sigma = random.randint(nlv[0], nlv[1])
+            noise = sigma / 255.0 * np.random.normal(size=img_label.shape)
+            img_noisy = img_label + noise
+
+        if self.opt['phase'] == 'train':
+            H, W, C = img_label.shape
+            # randomly crop
+            rnd_h = random.randint(0, max(0, H - im_size))
+            rnd_w = random.randint(0, max(0, W - im_size))
+            img_noisy = img_noisy[rnd_h:rnd_h + im_size, rnd_w:rnd_w + im_size, :]
+            img_label = img_label[rnd_h:rnd_h + im_size, rnd_w:rnd_w + im_size, :]
+
+            # augmentation - flip, rotate
+            img_noisy, img_label = util.augment([img_noisy, img_label], self.opt['use_flip'], self.opt['use_rot'])
+
+            # change color space if necessary
+        if self.opt['color']:
+            _, _, C = img_noisy.shape
+            img_noisy = util.channel_convert(C, self.opt['color'], [img_noisy])[0]
+
+        # BGR to RGB, HWC to CHW, numpy to tensor
+        if img_label.shape[2] == 3:
+            img_label = img_label[:, :, [2, 1, 0]]
+            img_noisy = img_noisy[:, :, [2, 1, 0]]
+        img_label = torch.from_numpy(np.ascontiguousarray(np.transpose(img_label, (2, 0, 1)))).float()
+        img_noisy = torch.from_numpy(np.ascontiguousarray(np.transpose(img_noisy, (2, 0, 1)))).float()
+
+        if noisy_path_ is None:
+            noisy_path_ = label_path_
+        return {'NI': img_noisy, 'LB': img_label, 'NI_path': noisy_path_, 'LB_path': label_path_}
+
+    def __len__(self):
+        return len(self.label_root)

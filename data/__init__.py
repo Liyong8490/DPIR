@@ -17,7 +17,7 @@ def create_dataloader(dataset, dataset_opt):
 
 def create_dataset(dataset_opt):
     mode = dataset_opt['mode']
-    if mode == 'denoising_model':
+    if mode == 'label-noisy':
         from data.denoising_dataset import DenoiseDataset as D
     else:
         raise NotImplementedError('Dataset [{:s}] is not recognized.'.format(mode))

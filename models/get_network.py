@@ -82,10 +82,13 @@ def choose(opt):
     opt_net = opt['network_opt']
     which_model = opt_net['network_name']
     if which_model == 'UNet':
-        net = arch.UNet(in_nc=opt_net['in_cn'], out_nc=['out_cn'])
+        net = arch.UNet(in_nc=opt_net['in_nc'], out_nc=opt_net['out_nc'])
+    elif which_model == 'DnCNN':
+        from models.models_DnCNN import DnCNN
+        net = DnCNN(input_chnl=opt_net['in_nc'])
     else:
         raise NotImplementedError('Choose network `{:s}` failed: NOT IMPLEMENTED.'.format(which_model))
-    if opt['is_train']:
+    if opt['is_train'] and which_model != 'DnCNN':
         init_weights(net, init_type='kaiming', scale=0.1)
     if gpu_ids:
         assert torch.cuda.is_available()

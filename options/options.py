@@ -26,21 +26,19 @@ def parse(opt_path, is_train=True): # remove comments starting with '//'
     opt['is_train'] = is_train
 
     # datasets
-    for phase, dataset in opt['datasets_opt'].item():
+    for phase, dataset in opt['datasets_opt'].items():
         phase = phase.split('_')[0]
         dataset['phase'] = phase
         is_lmdb = False
-        if 'data_root' in dataset and dataset['data_root'] is not None:
-            dataset['data_root'] = os.path.expanduser(dataset['data_root'])
-            if dataset['data_root'].endswith('lmdb'):
-                is_lmdb = True
         if 'label_root' in dataset and dataset['label_root'] is not None:
             dataset['label_root'] = os.path.expanduser(dataset['label_root'])
+            if dataset['label_root'].endswith('lmdb'):
+                is_lmdb = True
         if 'noisy_root' in dataset and dataset['noisy_root'] is not None:
             dataset['noisy_root'] = os.path.expanduser(dataset['noisy_root'])
         dataset['data_type'] = 'lmdb' if is_lmdb else 'img'
 
-    for key, path in opt['path_opt'].item():
+    for key, path in opt['path_opt'].items():
         if path and key in opt['path_opt']:
             opt['path_opt'][key] = os.path.expanduser(path)
     if is_train:
@@ -51,10 +49,10 @@ def parse(opt_path, is_train=True): # remove comments starting with '//'
         opt['path_opt']['val_images'] = os.path.join(experiments_root, 'val_images')
         # change some options for debug mode
         if 'debug' in opt['name']:
-            opt['train']['val_freq'] = 8
-            opt['logger']['print_freq'] = 2
-            opt['logger']['save_cpkt_freq'] = 8
-            opt['train']['lr_decay_iter'] = 10
+            opt['train_opt']['val_freq'] = 8
+            opt['logger_opt']['print_freq'] = 2
+            opt['logger_opt']['save_cpkt_freq'] = 8
+            opt['train_opt']['lr_decay_iter'] = 10
     else:  # test
         results_root = os.path.join(opt['path_opt']['root'], 'results', opt['name'])
         opt['path_opt']['results_root'] = results_root

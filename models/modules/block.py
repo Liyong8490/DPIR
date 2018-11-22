@@ -167,7 +167,7 @@ def downsample_block(
     """
     Downsample layer support `max`, `avg`, `conv`
     """
-    conv = conv_block(nc, nc, downs_factor, bias=bias,
+    conv = conv_block(nc, nc, 3, bias=bias,
                       pad_type=pad_type, norm_type=norm_type, act_type=act_type)
     if pool_type == 'max':
         p = nn.MaxPool2d(downs_factor, stride=downs_factor)

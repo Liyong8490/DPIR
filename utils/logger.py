@@ -20,8 +20,8 @@ class Logger(object):
     def __init__(self, opt):
         self.exp_name = opt['name']
         self.use_tb_logger = opt['use_tb_logger']
-        self.opt = opt['logger']
-        self.log_dir = opt['path']['log']
+        self.opt = opt['logger_opt']
+        self.log_dir = opt['path_opt']['log']
         # loss log file
         self.loss_log_path = os.path.join(self.log_dir, 'loss_log.txt')
         with open(self.loss_log_path, 'a') as log_file:

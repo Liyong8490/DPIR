@@ -80,7 +80,7 @@ def read_img(env, path):
     # some images have 4 channels
     if img.shape[2] > 3:
         img = img[:, :, :3]
-    return img
+    return np.squeeze(img)
 
 
 ####################

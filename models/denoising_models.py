@@ -22,9 +22,9 @@ class DenoisingModel(BaseModel):
             self.net.train()
             loss_type = train_opt['criterion']
             if loss_type == 'l1':
-                self.cri = nn.L1Loss().to(self.device)
+                self.cri = nn.L1Loss(size_average=False).to(self.device)
             elif loss_type == 'l2':
-                self.cri = nn.MSELoss().to(self.device)
+                self.cri = nn.MSELoss(size_average=False).to(self.device)
             else:
                 raise NotImplementedError("Loss type {:s} is not support.".format(loss_type))
 
@@ -36,9 +36,14 @@ class DenoisingModel(BaseModel):
                     optim_params.append(v)
                 else:
                     print("WARNING: params [{:s}] will not optimize.".format(k))
-            self.optimizer = torch.optim.Adam(optim_params,
-                                              lr=train_opt['lr'],
-                                              weight_decay=weight_decay)
+            if str.upper(train_opt['optimizer']) == 'ADAM':
+                self.optimizer = torch.optim.Adam(optim_params,
+                                                  lr=train_opt['lr'],
+                                                  weight_decay=weight_decay)
+            elif str.upper(train_opt['optimizer']) == 'SGD':
+                self.optimizer = torch.optim.SGD(optim_params,
+                                                 lr=train_opt['lr'],
+                                                 weight_decay=weight_decay)
             self.optimizers.append(self.optimizer)
 
             # schedulers
@@ -59,17 +64,17 @@ class DenoisingModel(BaseModel):
             print('-----------------------------------------------')
 
     def feed_data(self, data, need_label=True):
-        self.inputs = data['inputs'].to(self.device)
+        self.inputs = data['NI'].to(self.device)
         if need_label:
-            self.labels = data['labels'].to(self.device)
+            self.labels = data['LB'].to(self.device)
 
-    def optimize_parameters(self):
-        self.optimizer.zero_grad()
+    def optimize_parameters(self, ):
         if self.inputs is None or self.labels is None:
             raise ValueError("ERROR inputs or labels is None. "
                              "Make sure to feed proper data to the model.")
+        self.optimizer.zero_grad()
         self.preds = self.net(self.inputs)
-        loss_ = self.cri(self.preds, self.labels)
+        loss_ = self.cri(self.preds, self.labels) / (self.preds.data.shape[0] * 2)
         loss_.backward()
         self.optimizer.step()
         # set log

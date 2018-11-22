@@ -40,7 +40,7 @@ def tensor2img(tensor, out_type=np.uint8, min_max=(0,1)):
     :param min_max: output Tensor value range.
     :return: 3D(H, W, C) or 2D(H, W) range from 0 to 255 with type of np.uint8
     '''
-    tensor = tensor.squeeze().float.cpu().clamp_(*min_max)
+    tensor = tensor.squeeze().float().cpu().clamp_(*min_max)
     tensor = (tensor - min_max[0]) / (min_max[1]-min_max[0])
     n_dim = tensor.dim()
     if n_dim == 4:
