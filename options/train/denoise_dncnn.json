@@ -8,8 +8,9 @@
     "train": {
       "name": "DIV2K",
       "mode": "label-noisy",
+      "color": "y",
       "label_root": "./datasets/DIV2K800/DIV2K800_sub.lmdb",
-      "noise_level": [0, 50],
+      "noise_level": [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
       "use_shuffle": true,
       "n_workers": 0,
       "batch_size": 16,
@@ -20,9 +21,10 @@
     "val": {
       "name": "Set12",
       "mode": "label-noisy",
+      "color": "y",
       "label_root": "./datasets/val_set12/Set12",
       "noisy_root": "./datasets/val_set12/noisySet12_25",
-      "noise_level": [25, 25]
+      "noise_level": [25]
     }
   },
 
@@ -33,14 +35,14 @@
 
   "network_opt": {
     "network_name": "DnCNN",
-    "in_nc": 3,
-    "out_nc": 3,
+    "in_nc": 1,
+    "out_nc": 1,
     "nf": 64
   },
 
   "train_opt": {
-    "optimizer": "SGD",
-    "lr": 5e-5,
+    "optimizer": "adam",
+    "lr": 1e-4,
     "lr_scheme": "MultiStepLR",
     "lr_steps": [2e5, 4e5, 6e5, 8e5],
     "lr_gamma": 0.5,

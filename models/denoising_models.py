@@ -70,7 +70,7 @@ class DenoisingModel(BaseModel):
 
     def optimize_parameters(self, ):
         if self.inputs is None or self.labels is None:
-            raise ValueError("ERROR inputs or labels is None. "
+            raise ValueError("ERROR: inputs or labels is None. "
                              "Make sure to feed proper data to the model.")
         self.optimizer.zero_grad()
         self.preds = self.net(self.inputs)

@@ -15,7 +15,7 @@ from utils.logger import Logger, PrintLogger
 
 def main():
     parser = argparse.ArgumentParser("DPIR Deep Prior based Image Restoration.")
-    parser.add_argument('-opt', type=str, default='options/train/denoise_unet.json', help="Path to option JSON file.")
+    parser.add_argument('-opt', type=str, default='options/train/denoise_dpir.json', help="Path to option JSON file.")
     opt = option.parse(parser.parse_args().opt, is_train=True)
 
     util.mkdir_and_rename(opt['path_opt']['experiments_root'])
@@ -107,8 +107,8 @@ def main():
                     model.test_embed()
 
                     visuals = model.get_current_visuals()
-                    sr_img = util.tensor2img(visuals['preds'])  # uint8
-                    gt_img = util.tensor2img(visuals['labels'])  # uint8
+                    sr_img = util.tensor2img(visuals['preds'], min_max=(0, 1))  # uint8
+                    gt_img = util.tensor2img(visuals['labels'], min_max=(0, 1))  # uint8
 
                     # Save SR images for reference
                     save_img_path = os.path.join(img_dir, '{:s}_{:d}.png'.format( \

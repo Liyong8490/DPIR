@@ -31,18 +31,15 @@ class DenoiseDataset(data.Dataset):
     def __getitem__(self, index):
         noisy_path_ = None
         nlv = self.opt['noise_level']
-        if len(nlv) == 1:
-            nlv = [nlv, nlv]
-        elif len(nlv) != 2:
-            raise NotImplementedError("ERROR: noise level setting is wrong, please give a range e.g. [0, 50].")
         im_size = self.opt['im_size']
         label_path_ = self.label_root[index]
         img_label = util.read_img(self.env_lb, label_path_)
-        if self.opt['color']:
-            img_label = util.channel_convert(img_label.shape[2], self.opt['color'], [img_label])[0]
         # force to 3 channels
         if img_label.ndim == 2:
             img_label = cv2.cvtColor(img_label, cv2.COLOR_GRAY2BGR)
+        if self.opt['color']:
+            img_label = util.channel_convert(img_label.shape[2], self.opt['color'], [img_label])[0]
+
         # get noisy image
         if self.noisy_root:
             noisy_path_ = self.noisy_root[index]
@@ -53,7 +50,7 @@ class DenoiseDataset(data.Dataset):
             # random sample noise level from given range
             if self.opt['phase'] == 'train':
                 random_scale = random.choice(self.random_scale_list)
-                H_s, W_s, _ = img_label.shape
+                H_s, W_s, C_s = img_label.shape
 
                 def _mod(n, random_scale_, thres):
                     rlt = int(n * random_scale_)
@@ -62,14 +59,21 @@ class DenoiseDataset(data.Dataset):
                 H_s = _mod(H_s, random_scale, im_size)
                 W_s = _mod(W_s, random_scale, im_size)
                 img_label = cv2.resize(np.copy(img_label), (W_s, H_s), interpolation=cv2.INTER_LINEAR)
-
+            if img_label.ndim == 2:
+                img_label = np.expand_dims(img_label, axis=2)
             # add random noise to generate img_noisy
-            sigma = random.randint(nlv[0], nlv[1])
+            sigma = nlv[random.randrange(len(nlv))]
             noise = sigma / 255.0 * np.random.normal(size=img_label.shape)
-            img_noisy = img_label + noise
+            img_noisy = (img_label + noise) * 255.0
+            img_noisy = img_noisy.round()
+            img_noisy[img_noisy > 255] = 255
+            img_noisy[img_noisy < 0] = 0
+            img_noisy /= 255.0
 
         if self.opt['phase'] == 'train':
-            H, W, C = img_label.shape
+            shape = img_label.shape
+            H = shape[0]
+            W = shape[1]
             # randomly crop
             rnd_h = random.randint(0, max(0, H - im_size))
             rnd_w = random.randint(0, max(0, W - im_size))

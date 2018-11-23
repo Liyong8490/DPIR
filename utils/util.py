@@ -65,12 +65,22 @@ def save_img(img, img_path):
     cv.imwrite(img_path, img)
 
 
-def psnr(im1, im2):
+def psnr_skimage(im1, im2):
     # mse = np.power(im1 - im2, 2).mean()
     # psnr = 20 * np.log10(255.0) - 10 * np.log10(mse)
     im1 = np.maximum(np.minimum(im1, 1.0), 0.0)
     im2 = np.maximum(np.minimum(im2, 1.0), 0.0)
     return compare_psnr(im1, im2)
+
+
+def psnr(img1, img2):
+    assert img1.dtype == img2.dtype == np.uint8, 'np.uint8 is supposed.'
+    img1 = img1.astype(np.float64)
+    img2 = img2.astype(np.float64)
+    mse = np.mean((img1 - img2)**2)
+    if mse == 0:
+        return float('inf')
+    return 20 * math.log10(255.0 / math.sqrt(mse))
 
 
 def ssim(im1, im2):
