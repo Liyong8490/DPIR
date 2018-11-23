@@ -99,6 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+.idea/
 datasets/
 experiments/
 pretrained_models/
